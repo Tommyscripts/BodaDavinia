@@ -1,4 +1,5 @@
 import './App.css'
+import Botones from './componentes/Botones'
 import FotoMainBoda from './componentes/FotoMainBoda'
 import Nombres from './componentes/Nombres'
 
@@ -9,6 +10,7 @@ function App() {
         <FotoMainBoda />
         <div className="px-6 pb-8 text-center md:px-10 md:pb-10">
           <Nombres />
+          <Botones />
         </div>
       </section>
     </main>
