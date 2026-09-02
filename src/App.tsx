@@ -14,7 +14,7 @@ function App() {
   const abrirGaleria = () => setGaleriaAbierta(true)
   const cerrarGaleria = () => setGaleriaAbierta(false)
 
-  const handleAdminLoginToggle = () => setAdminLogeado((v) => !v)
+  
   const [loginAbierto, setLoginAbierto] = useState(false)
 
   const abrirLogin = () => setLoginAbierto(true)
@@ -105,7 +105,7 @@ function App() {
 
               <h3 className="mb-4 text-xl font-semibold text-[#8f6d35]">Iniciar sesión (Admin)</h3>
               <InicioSesion
-                onSuccess={(res) => {
+                onSuccess={() => {
                   // marcar admin como logeado y cerrar modal
                   setAdminLogeado(true)
                   cerrarLogin()

@@ -18,7 +18,7 @@ const imagenesPorDefecto: ImagenGaleria[] = [
 
 function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: GaleriaProps) {
 	const [items, setItems] = useState<ImagenGaleria[]>(imagenes)
-	const [cargando, setCargando] = useState(false)
+	const [, setCargando] = useState(false)
 	const [modoSeleccion, setModoSeleccion] = useState(false)
 	const [seleccionadas, setSeleccionadas] = useState<Set<string>>(new Set())
 	const [visorIndex, setVisorIndex] = useState<number | null>(null)
