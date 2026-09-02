@@ -26,14 +26,13 @@ function Botones({ onSubirFotosClick, onVerGaleriaClick, onAdminLoginClick }: Bo
 	}
 
 	const handleAdminLogin = () => {
-		if (onAdminLoginClick) {
-			onAdminLoginClick()
-			return
-		}
+			if (onAdminLoginClick) {
+				onAdminLoginClick()
+				return
+			}
 
-		// Placeholder temporal: login admin pendiente de implementar.
-		console.info('El acceso admin estara disponible cuando se cree autenticacion.')
-	}
+			console.info('El acceso admin estara disponible cuando se cree autenticacion.')
+		}
 
 	return (
 		<div className="mt-6 flex flex-wrap items-center justify-center gap-4 md:mt-8 md:gap-6">

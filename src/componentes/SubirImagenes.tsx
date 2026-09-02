@@ -43,7 +43,10 @@ function SubirImagenes({ multiple = true, onUploaded }: Props) {
 
         clearInterval(interval)
         setProgress((p) => ({ ...p, [file.name]: 100 }))
-        results.push(res)
+
+        // include file preview so the parent can show the image immediately
+        const preview = URL.createObjectURL(file)
+        results.push({ fileName: file.name, response: res, preview })
       }
 
       setFiles([])

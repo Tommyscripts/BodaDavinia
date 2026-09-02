@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import SubirImagenes from './SubirImagenes'
+import { fetchImages } from '../services/api'
 
 type ImagenGaleria = {
 	id: string
@@ -9,14 +11,16 @@ type ImagenGaleria = {
 type GaleriaProps = {
 	estaLogeado?: boolean
 	imagenes?: ImagenGaleria[]
+	onAddImagenes?: (nuevas: ImagenGaleria[]) => void
 }
 
 const imagenesPorDefecto: ImagenGaleria[] = [
 	{ id: 'boda-1', src: '/boda1.jpg', alt: 'Davinia y Emeterio en su boda' },
 ]
 
-function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: GaleriaProps) {
+function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto, onAddImagenes }: GaleriaProps) {
 	const [items, setItems] = useState<ImagenGaleria[]>(imagenes)
+	const [cargando, setCargando] = useState(false)
 	const [modoSeleccion, setModoSeleccion] = useState(false)
 	const [seleccionadas, setSeleccionadas] = useState<Set<string>>(new Set())
 	const [visorIndex, setVisorIndex] = useState<number | null>(null)
@@ -36,6 +40,39 @@ function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: Galeria
 		setModoSeleccion(false)
 		setSeleccionadas(new Set())
 	}
+
+	const agregarImagenes = (nuevas: ImagenGaleria[]) => {
+		setItems((prev) => [...nuevas, ...prev])
+		onAddImagenes?.(nuevas)
+	}
+
+	useEffect(() => {
+		let mounted = true
+		const cargar = async () => {
+			setCargando(true)
+			try {
+				const data = await fetchImages()
+				if (!mounted) return
+
+				// Esperamos que el backend devuelva un array de { id, url, alt }
+				if (Array.isArray(data)) {
+					const imgs = data.map((it: any) => ({ id: it.id || it.url, src: it.url || it.src, alt: it.alt || '' }))
+					setItems((prev) => [...imgs, ...prev])
+				}
+			} catch (e) {
+				// Silencioso — la UI seguirá mostrando imágenes por defecto
+				console.warn('No se pudieron cargar imágenes desde backend', e)
+			} finally {
+				setCargando(false)
+			}
+		}
+
+		cargar()
+
+		return () => {
+			mounted = false
+		}
+	}, [])
 
 	const toggleSeleccion = (id: string) => {
 		setSeleccionadas((prev) => {
@@ -224,6 +261,24 @@ function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: Galeria
 					</div>
 				</div>
 			)}
+
+			{/* Sección pública de subida — disponible para todos */}
+			<div className="mt-8">
+				<h3 className="mb-3 text-lg font-medium text-[#7b5c26]">Sube tus fotos</h3>
+				<SubirImagenes
+					multiple
+					onUploaded={(results) => {
+						// results: [{ fileName, response, preview }]
+						const nuevas = results.map((r: any, i: number) => ({
+							id: `user-${Date.now()}-${i}`,
+							src: r.preview || r.response?.url || `/uploads/${r.fileName}`,
+							alt: r.response?.alt || r.fileName,
+						}))
+
+						agregarImagenes(nuevas)
+					}}
+				/>
+			</div>
 		</section>
 	)
 }

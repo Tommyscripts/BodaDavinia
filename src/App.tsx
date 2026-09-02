@@ -4,6 +4,7 @@ import Botones from './componentes/Botones'
 import FotoMainBoda from './componentes/FotoMainBoda'
 import Galeria from './componentes/Galeria'
 import Nombres from './componentes/Nombres'
+import InicioSesion from './componentes/InicioSesion'
 
 function App() {
   const [adminLogeado, setAdminLogeado] = useState(false)
@@ -13,6 +14,10 @@ function App() {
   const cerrarGaleria = () => setGaleriaAbierta(false)
 
   const handleAdminLoginToggle = () => setAdminLogeado((v) => !v)
+  const [loginAbierto, setLoginAbierto] = useState(false)
+
+  const abrirLogin = () => setLoginAbierto(true)
+  const cerrarLogin = () => setLoginAbierto(false)
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col items-center px-4 py-5 md:px-8 md:py-8">
@@ -20,7 +25,7 @@ function App() {
         <FotoMainBoda />
         <div className="px-6 pb-8 text-center md:px-10 md:pb-10">
           <Nombres />
-          <Botones onVerGaleriaClick={abrirGaleria} onAdminLoginClick={handleAdminLoginToggle} />
+          <Botones onSubirFotosClick={abrirGaleria} onVerGaleriaClick={abrirGaleria} onAdminLoginClick={abrirLogin} />
         </div>
       </section>
 
@@ -42,6 +47,31 @@ function App() {
           </div>
         </div>
       )}
+
+        {loginAbierto && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-6">
+            <div className="absolute inset-0 bg-black/60" onClick={cerrarLogin} />
+            <div className="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-lg">
+              <button
+                type="button"
+                onClick={cerrarLogin}
+                aria-label="Cerrar login"
+                className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#5e4a25] shadow hover:bg-gray-50"
+              >
+                ✕
+              </button>
+
+              <h3 className="mb-4 text-xl font-semibold text-[#8f6d35]">Iniciar sesión (Admin)</h3>
+              <InicioSesion
+                onSuccess={(res) => {
+                  // marcar admin como logeado y cerrar modal
+                  setAdminLogeado(true)
+                  cerrarLogin()
+                }}
+              />
+            </div>
+          </div>
+        )}
     </main>
   )
 }
