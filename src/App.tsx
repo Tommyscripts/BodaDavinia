@@ -4,6 +4,7 @@ import Botones from './componentes/Botones'
 import FotoMainBoda from './componentes/FotoMainBoda'
 import Galeria from './componentes/Galeria'
 import Nombres from './componentes/Nombres'
+import SubirImagenes from './componentes/SubirImagenes'
 import InicioSesion from './componentes/InicioSesion'
 
 function App() {
@@ -18,6 +19,11 @@ function App() {
 
   const abrirLogin = () => setLoginAbierto(true)
   const cerrarLogin = () => setLoginAbierto(false)
+  const [subirAbierto, setSubirAbierto] = useState(false)
+
+  const abrirSubir = () => setSubirAbierto(true)
+  const cerrarSubir = () => setSubirAbierto(false)
+  const [transientImagenes, setTransientImagenes] = useState<any[]>([])
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col items-center px-4 py-5 md:px-8 md:py-8">
@@ -25,7 +31,7 @@ function App() {
         <FotoMainBoda />
         <div className="px-6 pb-8 text-center md:px-10 md:pb-10">
           <Nombres />
-          <Botones onSubirFotosClick={abrirGaleria} onVerGaleriaClick={abrirGaleria} onAdminLoginClick={abrirLogin} />
+          <Botones onSubirFotosClick={abrirSubir} onVerGaleriaClick={abrirGaleria} onAdminLoginClick={abrirLogin} />
         </div>
       </section>
 
@@ -43,7 +49,43 @@ function App() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-            <Galeria estaLogeado={adminLogeado} />
+            <Galeria estaLogeado={adminLogeado} imagenes={transientImagenes.length ? transientImagenes : undefined} />
+          </div>
+        </div>
+      )}
+
+      {subirAbierto && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/60" onClick={cerrarSubir} />
+          <div className="relative z-10 w-full max-w-3xl rounded-2xl bg-white p-6 shadow-lg">
+            <button
+              type="button"
+              onClick={cerrarSubir}
+              aria-label="Cerrar subir"
+              className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#5e4a25] shadow hover:bg-gray-50"
+            >
+              ✕
+            </button>
+
+            <h3 className="mb-4 text-xl font-semibold text-[#8f6d35]">Subir imagenes</h3>
+            <SubirImagenes
+              multiple
+              showActions
+              onUploaded={(results) => {
+                // Map uploaded results into gallery items and prepend to Galeria by opening it
+                const nuevas = results.map((r: any, i: number) => ({
+                  id: `user-${Date.now()}-${i}`,
+                  src: r.preview || r.response?.url || `/uploads/${r.fileName}`,
+                  alt: r.response?.alt || r.fileName,
+                }))
+
+                // close uploader and open gallery to show new images
+                cerrarSubir()
+                setGaleriaAbierta(true)
+                // pass nuevas into Galeria via the `imagenes` prop by setting a transient state
+                setTransientImagenes(nuevas)
+              }}
+            />
           </div>
         </div>
       )}

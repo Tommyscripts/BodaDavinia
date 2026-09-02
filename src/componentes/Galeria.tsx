@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import SubirImagenes from './SubirImagenes'
 import { fetchImages } from '../services/api'
 
 type ImagenGaleria = {
@@ -11,14 +10,13 @@ type ImagenGaleria = {
 type GaleriaProps = {
 	estaLogeado?: boolean
 	imagenes?: ImagenGaleria[]
-	onAddImagenes?: (nuevas: ImagenGaleria[]) => void
 }
 
 const imagenesPorDefecto: ImagenGaleria[] = [
 	{ id: 'boda-1', src: '/boda1.jpg', alt: 'Davinia y Emeterio en su boda' },
 ]
 
-function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto, onAddImagenes }: GaleriaProps) {
+function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: GaleriaProps) {
 	const [items, setItems] = useState<ImagenGaleria[]>(imagenes)
 	const [cargando, setCargando] = useState(false)
 	const [modoSeleccion, setModoSeleccion] = useState(false)
@@ -39,11 +37,6 @@ function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto, onAddImag
 	const cerrarSeleccion = () => {
 		setModoSeleccion(false)
 		setSeleccionadas(new Set())
-	}
-
-	const agregarImagenes = (nuevas: ImagenGaleria[]) => {
-		setItems((prev) => [...nuevas, ...prev])
-		onAddImagenes?.(nuevas)
 	}
 
 	useEffect(() => {
@@ -73,6 +66,17 @@ function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto, onAddImag
 			mounted = false
 		}
 	}, [])
+
+	// If parent provides `imagenes` prop updates, merge them at the top
+	useEffect(() => {
+		setItems((prev) => {
+			// avoid duplicates by id
+			const existingIds = new Set(prev.map(i => i.id))
+			const nuevos = imagenes.filter(i => !existingIds.has(i.id))
+			if (nuevos.length === 0) return prev
+			return [...nuevos, ...prev]
+		})
+	}, [imagenes])
 
 	const toggleSeleccion = (id: string) => {
 		setSeleccionadas((prev) => {
@@ -262,23 +266,7 @@ function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto, onAddImag
 				</div>
 			)}
 
-			{/* Sección pública de subida — disponible para todos */}
-			<div className="mt-8">
-				<h3 className="mb-3 text-lg font-medium text-[#7b5c26]">Sube tus fotos</h3>
-				<SubirImagenes
-					multiple
-					onUploaded={(results) => {
-						// results: [{ fileName, response, preview }]
-						const nuevas = results.map((r: any, i: number) => ({
-							id: `user-${Date.now()}-${i}`,
-							src: r.preview || r.response?.url || `/uploads/${r.fileName}`,
-							alt: r.response?.alt || r.fileName,
-						}))
-
-						agregarImagenes(nuevas)
-					}}
-				/>
-			</div>
+			{/* Uploader embebido eliminado: la subida se abre desde el botón SUBIR FOTOS */}
 		</section>
 	)
 }

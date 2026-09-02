@@ -4,9 +4,10 @@ import { uploadImage } from '../services/api'
 type Props = {
   multiple?: boolean
   onUploaded?: (data: any) => void
+  showActions?: boolean
 }
 
-function SubirImagenes({ multiple = true, onUploaded }: Props) {
+function SubirImagenes({ multiple = true, onUploaded, showActions = true }: Props) {
   const [files, setFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -89,23 +90,27 @@ function SubirImagenes({ multiple = true, onUploaded }: Props) {
       )}
 
       <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={handleUpload}
-          disabled={uploading || files.length === 0}
-          className="rounded bg-[#c59c54] px-4 py-2 text-white disabled:opacity-50"
-        >
-          {uploading ? 'Subiendo...' : 'Subir'}
-        </button>
+        {showActions && (
+          <>
+            <button
+              type="button"
+              onClick={handleUpload}
+              disabled={uploading || files.length === 0}
+              className="rounded bg-[#c59c54] px-4 py-2 text-white disabled:opacity-50"
+            >
+              {uploading ? 'Subiendo...' : 'Subir'}
+            </button>
 
-        <button
-          type="button"
-          onClick={() => setFiles([])}
-          disabled={uploading}
-          className="rounded border px-3 py-2"
-        >
-          Limpiar
-        </button>
+            <button
+              type="button"
+              onClick={() => setFiles([])}
+              disabled={uploading}
+              className="rounded border px-3 py-2"
+            >
+              Limpiar
+            </button>
+          </>
+        )}
       </div>
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
