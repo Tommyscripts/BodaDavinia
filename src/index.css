@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+.gold-text {
+	background: linear-gradient(180deg, #fff2b8 0%, #f4d267 35%, #d9a441 70%, #b97a1d 100%);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+	text-shadow: 0 2px 10px rgba(217, 164, 65, 0.25);
+}
