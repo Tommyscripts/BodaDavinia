@@ -6,11 +6,13 @@ import Galeria from './componentes/Galeria'
 import Nombres from './componentes/Nombres'
 
 function App() {
-  const adminLogeado = true
+  const [adminLogeado, setAdminLogeado] = useState(false)
   const [galeriaAbierta, setGaleriaAbierta] = useState(false)
 
   const abrirGaleria = () => setGaleriaAbierta(true)
   const cerrarGaleria = () => setGaleriaAbierta(false)
+
+  const handleAdminLoginToggle = () => setAdminLogeado((v) => !v)
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col items-center px-4 py-5 md:px-8 md:py-8">
@@ -18,7 +20,7 @@ function App() {
         <FotoMainBoda />
         <div className="px-6 pb-8 text-center md:px-10 md:pb-10">
           <Nombres />
-          <Botones onVerGaleriaClick={abrirGaleria} />
+          <Botones onVerGaleriaClick={abrirGaleria} onAdminLoginClick={handleAdminLoginToggle} />
         </div>
       </section>
 

@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import heroImage from '../assets/hero.png'
 
 type ImagenGaleria = {
 	id: string
@@ -14,27 +13,19 @@ type GaleriaProps = {
 
 const imagenesPorDefecto: ImagenGaleria[] = [
 	{ id: 'boda-1', src: '/boda1.jpg', alt: 'Davinia y Emeterio en su boda' },
-	{ id: 'hero-1', src: heroImage, alt: 'Imagen principal de portada' },
 ]
 
 function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: GaleriaProps) {
 	const [items, setItems] = useState<ImagenGaleria[]>(imagenes)
-	const [indiceActivo, setIndiceActivo] = useState(0)
 	const [modoSeleccion, setModoSeleccion] = useState(false)
 	const [seleccionadas, setSeleccionadas] = useState<Set<string>>(new Set())
+	const [visorIndex, setVisorIndex] = useState<number | null>(null)
 
 	const haySeleccion = seleccionadas.size > 0
-	const imagenActual = items[indiceActivo]
 
 	const idsSeleccionados = useMemo(() => Array.from(seleccionadas), [seleccionadas])
 
-	const mover = (direccion: number) => {
-		if (items.length === 0) {
-			return
-		}
-
-		setIndiceActivo((prev) => (prev + direccion + items.length) % items.length)
-	}
+	// Navegación por imagen completa se realiza dentro del visor modal
 
 	const abrirSeleccion = () => {
 		setModoSeleccion(true)
@@ -74,27 +65,36 @@ function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: Galeria
 	}
 
 	const borrarSeleccion = () => {
-		if (!haySeleccion) {
-			return
-		}
+		if (!haySeleccion) return
 
 		const confirmado = window.confirm('Seguro/a que quieres borrar las imagenes?')
-
-		if (!confirmado) {
-			return
-		}
+		if (!confirmado) return
 
 		const siguientes = items.filter((item) => !seleccionadas.has(item.id))
 		setItems(siguientes)
 		setSeleccionadas(new Set())
 
 		if (siguientes.length === 0) {
-			setIndiceActivo(0)
+			setVisorIndex(null)
 			setModoSeleccion(false)
 			return
 		}
 
-		setIndiceActivo((prev) => Math.min(prev, siguientes.length - 1))
+		setVisorIndex((prev) => {
+			if (prev === null) return null
+			return Math.min(prev, siguientes.length - 1)
+		})
+	}
+
+	const cerrarVisor = () => setVisorIndex(null)
+
+	const moverVisor = (direccion: number) => {
+		if (items.length === 0 || visorIndex === null) return
+
+		setVisorIndex((prev) => {
+			if (prev === null) return null
+			return (prev + direccion + items.length) % items.length
+		})
 	}
 
 	return (
@@ -162,7 +162,7 @@ function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: Galeria
 												return
 											}
 
-											setIndiceActivo(index)
+											setVisorIndex(index)
 										}}
 										className="relative block w-full"
 									>
@@ -179,38 +179,49 @@ function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: Galeria
 						})}
 					</div>
 
-					<div className="rounded-2xl border border-[#e8ddc7] bg-[#fffdf7] p-4 shadow-[0_8px_22px_rgba(60,42,13,0.10)]">
-						<div className="flex items-center justify-between gap-3">
-							<button
-								type="button"
-								onClick={() => mover(-1)}
-								className="rounded-full border border-[#cdb57f] bg-white px-4 py-2 text-sm font-semibold text-[#6f5528] transition hover:bg-[#faf4e3]"
-							>
-								Anterior
-							</button>
-							<p className="text-sm font-medium text-[#5e4a25]">
-								{items.length > 0 ? indiceActivo + 1 : 0} / {items.length}
-							</p>
-							<button
-								type="button"
-								onClick={() => mover(1)}
-								className="rounded-full border border-[#cdb57f] bg-white px-4 py-2 text-sm font-semibold text-[#6f5528] transition hover:bg-[#faf4e3]"
-							>
-								Siguiente
-							</button>
-						</div>
-						{imagenActual && (
-							<img
-								src={imagenActual.src}
-								alt={imagenActual.alt}
-								className="mt-4 h-[28rem] w-full rounded-xl object-cover object-center"
-							/>
-						)}
-					</div>
+					{/* Se muestra el grid; la vista ampliada se abre en un modal al hacer click en la miniatura */}
 				</>
 			) : (
 				<div className="rounded-2xl border border-dashed border-[#cfbf9d] bg-[#fffdf8] p-8 text-center text-[#6f5528]">
 					No hay imagenes disponibles.
+				</div>
+			)}
+
+			{visorIndex !== null && (
+				<div className="fixed inset-0 z-60 flex items-center justify-center p-6">
+					<div className="absolute inset-0 bg-black/60" onClick={cerrarVisor} />
+					<div className="relative z-10 mx-auto max-w-4xl max-h-[90vh] overflow-auto rounded-lg bg-white p-4">
+						<button
+							type="button"
+							onClick={cerrarVisor}
+							aria-label="Cerrar visor"
+							className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#5e4a25] shadow hover:bg-gray-50"
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+								<path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+							</svg>
+						</button>
+
+						<div className="flex items-center justify-between gap-3">
+							<button
+								type="button"
+								onClick={() => moverVisor(-1)}
+								className="rounded-full border border-[#cdb57f] bg-white px-3 py-1 text-sm font-semibold text-[#6f5528] transition hover:bg-[#faf4e3]"
+							>
+								‹
+							</button>
+							<div className="mx-4 max-h-[80vh] overflow-auto">
+								<img src={items[visorIndex].src} alt={items[visorIndex].alt} className="max-h-[80vh] w-auto" />
+							</div>
+							<button
+								type="button"
+								onClick={() => moverVisor(1)}
+								className="rounded-full border border-[#cdb57f] bg-white px-3 py-1 text-sm font-semibold text-[#6f5528] transition hover:bg-[#faf4e3]"
+							>
+								›
+							</button>
+						</div>
+					</div>
 				</div>
 			)}
 		</section>
