@@ -141,44 +141,66 @@ function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: Galeria
 		})
 	}
 
-	const borrarSeleccion = () => {
+	const borrarSeleccion = async () => {
 		if (!haySeleccion) return
 
 		const confirmado = window.confirm('Seguro/a que quieres borrar las imagenes?')
 		if (!confirmado) return
 
-		const siguientes = items.filter((item) => !seleccionadas.has(item.id))
-
-		// attempt to delete on backend for each selected id
 		const toDelete = items.filter((item) => seleccionadas.has(item.id)).map(i => i.id)
 
-		Promise.allSettled(toDelete.map(id => deleteImage(id).catch((e) => e)))
-			.then(() => {
-				// update state and persisted storage regardless of backend outcome
-				setItems(siguientes)
-				setSeleccionadas(new Set())
-				// update localStorage persisted list
+		setCargando(true)
+		try {
+			const results = await Promise.all(toDelete.map(async (id) => {
+				try {
+					await deleteImage(id)
+					return { id, ok: true }
+				} catch (e: any) {
+					return { id, ok: false, status: e?.status || null, message: e?.message }
+				}
+			}))
+
+			const succeeded = results.filter((r: any) => r.ok).map((r: any) => r.id)
+			const failed = results.filter((r: any) => !r.ok)
+
+			const hadUnauthorized = failed.some((f: any) => f.status === 401 || String(f.message || '').toLowerCase().includes('unauthorized'))
+			if (hadUnauthorized) {
+				alert('No autorizado. Por favor inicia sesión para borrar imágenes.')
+			}
+
+			// Remove only successfully deleted items from UI and storage
+			if (succeeded.length > 0) {
+				setItems((prev) => prev.filter((p) => !succeeded.includes(p.id)))
 				try {
 					const existing = localStorage.getItem('uploaded_images')
 					if (existing) {
 						const parsed = JSON.parse(existing)
-						const remain = parsed.filter((p: any) => !seleccionadas.has(p.id))
+						const remain = parsed.filter((p: any) => !succeeded.includes(p.id))
 						localStorage.setItem('uploaded_images', JSON.stringify(remain))
 					}
 				} catch (e) {
 					// ignore
 				}
-			})
+			}
 
-		if (siguientes.length === 0) {
-			setVisorIndex(null)
-			setModoSeleccion(false)
-			return
+			setSeleccionadas(new Set())
+		} catch (e) {
+			console.error('Error borrando imágenes', e)
+			alert('Error al borrar las imágenes. Inténtalo de nuevo.')
+		} finally {
+			setCargando(false)
 		}
 
+		// Update viewer state
 		setVisorIndex((prev) => {
+			const remaining = items.filter((item) => !seleccionadas.has(item.id))
+			if (remaining.length === 0) {
+				setVisorIndex(null)
+				setModoSeleccion(false)
+				return null
+			}
 			if (prev === null) return null
-			return Math.min(prev, siguientes.length - 1)
+			return Math.min(prev, remaining.length - 1)
 		})
 	}
 

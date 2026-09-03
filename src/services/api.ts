@@ -86,14 +86,20 @@ export async function deleteImage(
   deletePathBase = '/api/images'
 ) {
   if (!filename) throw new Error('filename required')
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
   const encoded = encodeURIComponent(filename)
   const res = await fetch(fullUrl(`${deletePathBase}/${encoded}`), {
     method: 'DELETE',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   })
 
   if (!res.ok) {
     const text = await res.text()
-    throw new Error(text || res.statusText)
+    const err: any = new Error(text || res.statusText)
+    err.status = res.status
+    throw err
   }
 
   return res.json()
