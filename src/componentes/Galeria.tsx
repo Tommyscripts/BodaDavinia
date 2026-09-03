@@ -17,7 +17,30 @@ const imagenesPorDefecto: ImagenGaleria[] = [
 ]
 
 function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: GaleriaProps) {
-	const [items, setItems] = useState<ImagenGaleria[]>(imagenes)
+	// cargar imágenes persistidas en localStorage (fallback mientras backend no lista)
+	let persisted: ImagenGaleria[] = []
+	try {
+		const s = typeof window !== 'undefined' ? localStorage.getItem('uploaded_images') : null
+		persisted = s ? JSON.parse(s) : []
+	} catch (e) {
+		persisted = []
+	}
+
+	const initialItems = (() => {
+		const propImgs = Array.isArray(imagenes) ? imagenes : []
+		const existingIds = new Set(propImgs.map(i => i.id))
+
+		// merge: prop images first (newly uploaded), then persisted, then defaults (avoid duplicates)
+		const merged: ImagenGaleria[] = [
+			...propImgs,
+			...persisted.filter(p => !existingIds.has(p.id)),
+			...imagenesPorDefecto.filter(d => ![...propImgs, ...persisted].some(i => i.id === d.id)),
+		]
+
+		return merged
+	})()
+
+	const [items, setItems] = useState<ImagenGaleria[]>(initialItems)
 	const [, setCargando] = useState(false)
 	const [modoSeleccion, setModoSeleccion] = useState(false)
 	const [seleccionadas, setSeleccionadas] = useState<Set<string>>(new Set())
@@ -48,13 +71,13 @@ function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: Galeria
 				if (!mounted) return
 
 				// Esperamos que el backend devuelva un array de { id, url, alt }
-				if (Array.isArray(data)) {
+				if (Array.isArray(data) && data.length) {
 					const imgs = data.map((it: any) => ({ id: it.id || it.url, src: it.url || it.src, alt: it.alt || '' }))
 					setItems((prev) => [...imgs, ...prev])
 				}
 			} catch (e) {
-				// Silencioso — la UI seguirá mostrando imágenes por defecto
-				console.warn('No se pudieron cargar imágenes desde backend', e)
+				// Silencioso — la UI seguirá mostrando imágenes por defecto o las persistidas
+				console.warn('No se pudieron cargar imágenes desde backend')
 			} finally {
 				setCargando(false)
 			}

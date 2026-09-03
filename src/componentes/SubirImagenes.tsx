@@ -45,13 +45,26 @@ function SubirImagenes({ multiple = true, onUploaded, showActions = true }: Prop
         clearInterval(interval)
         setProgress((p) => ({ ...p, [file.name]: 100 }))
 
-        // include file preview so the parent can show the image immediately
-        const preview = URL.createObjectURL(file)
+        // the backend returns image info with filename and path; try to use it
+        const imageUrl = res?.image?.path || res?.image?.url || undefined
+        const preview = imageUrl || URL.createObjectURL(file)
+
         results.push({ fileName: file.name, response: res, preview })
       }
 
       setFiles([])
       onUploaded?.(results)
+
+      // persist uploaded images locally so they survive refresh while backend listing is not available
+      try {
+        const existing = typeof window !== 'undefined' ? localStorage.getItem('uploaded_images') : null
+        const parsed = existing ? JSON.parse(existing) : []
+        const added = results.map((r: any, i: number) => ({ id: `user-${Date.now()}-${i}`, src: r.preview, alt: r.fileName }))
+        const merged = [...added, ...parsed]
+        localStorage.setItem('uploaded_images', JSON.stringify(merged))
+      } catch (e) {
+        // ignore storage errors
+      }
     } catch (err: any) {
       setError(err?.message || 'Error al subir las imágenes')
     } finally {
