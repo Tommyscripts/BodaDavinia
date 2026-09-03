@@ -1,5 +1,6 @@
-// If VITE_API_BASE is set, use it; otherwise use relative paths so Vite dev proxy works.
-export const API_BASE = (import.meta.env.VITE_API_BASE as string) || ''
+// If VITE_API_BASE is set, use it; otherwise default to the deployed backend.
+const DEFAULT_API = 'https://bodadaviniabackend-zt73.onrender.com'
+export const API_BASE = (import.meta.env.VITE_API_BASE as string) || DEFAULT_API
 
 function fullUrl(path: string) {
   if (!path) return API_BASE || path
@@ -14,7 +15,7 @@ function fullUrl(path: string) {
   return path
 }
 
-export async function uploadImage(file: File, uploadPath = '/api/upload', fieldName = 'file') {
+export async function uploadImage(file: File, uploadPath = '/api/images/upload', fieldName = 'image') {
   const fd = new FormData()
   fd.append(fieldName, file)
 
@@ -34,6 +35,8 @@ export async function uploadImage(file: File, uploadPath = '/api/upload', fieldN
 export async function fetchImages(imagesPath = '/api/images') {
   const res = await fetch(fullUrl(imagesPath))
   if (!res.ok) {
+    // If the backend doesn't implement a listing endpoint, return an empty array
+    if (res.status === 404) return []
     const text = await res.text()
     throw new Error(text || res.statusText)
   }
@@ -54,4 +57,26 @@ export async function login(
   const json = await res.json()
   if (!res.ok) throw new Error(json?.message || res.statusText)
   return json
+}
+
+export async function changePassword(
+  password: string,
+  changePath = '/api/auth/change-password'
+) {
+  const token = localStorage.getItem('auth_token')
+  const res = await fetch(fullUrl(changePath), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ password }),
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || res.statusText)
+  }
+
+  return res.json()
 }

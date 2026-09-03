@@ -6,9 +6,16 @@ import Galeria from './componentes/Galeria'
 import Nombres from './componentes/Nombres'
 import SubirImagenes from './componentes/SubirImagenes'
 import InicioSesion from './componentes/InicioSesion'
+import Perfil from './componentes/Perfil'
 
 function App() {
-  const [adminLogeado, setAdminLogeado] = useState(false)
+  const [adminLogeado, setAdminLogeado] = useState<boolean>(() => {
+    try {
+      return Boolean(localStorage.getItem('auth_token'))
+    } catch (e) {
+      return false
+    }
+  })
   const [galeriaAbierta, setGaleriaAbierta] = useState(false)
 
   const abrirGaleria = () => setGaleriaAbierta(true)
@@ -19,6 +26,9 @@ function App() {
 
   const abrirLogin = () => setLoginAbierto(true)
   const cerrarLogin = () => setLoginAbierto(false)
+  const [perfilAbierto, setPerfilAbierto] = useState(false)
+  const abrirPerfil = () => setPerfilAbierto(true)
+  const cerrarPerfil = () => setPerfilAbierto(false)
   const [subirAbierto, setSubirAbierto] = useState(false)
 
   const abrirSubir = () => setSubirAbierto(true)
@@ -31,7 +41,18 @@ function App() {
         <FotoMainBoda />
         <div className="px-6 pb-8 text-center md:px-10 md:pb-10">
           <Nombres />
-          <Botones onSubirFotosClick={abrirSubir} onVerGaleriaClick={abrirGaleria} onAdminLoginClick={abrirLogin} />
+          <Botones
+            onSubirFotosClick={abrirSubir}
+            onVerGaleriaClick={abrirGaleria}
+            onAdminLoginClick={() => {
+              const token = localStorage.getItem('auth_token')
+              if (token) {
+                abrirPerfil()
+              } else {
+                abrirLogin()
+              }
+            }}
+          />
         </div>
       </section>
 
@@ -109,6 +130,34 @@ function App() {
                   // marcar admin como logeado y cerrar modal
                   setAdminLogeado(true)
                   cerrarLogin()
+                }}
+              />
+            </div>
+          </div>
+        )}
+        {perfilAbierto && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-6">
+            <div className="absolute inset-0 bg-black/60" onClick={cerrarPerfil} />
+            <div className="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-lg">
+              <button
+                type="button"
+                onClick={cerrarPerfil}
+                aria-label="Cerrar perfil"
+                className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#5e4a25] shadow hover:bg-gray-50"
+              >
+                ✕
+              </button>
+
+              <Perfil
+                onClose={() => {
+                  cerrarPerfil()
+                }}
+                onLogout={() => {
+                  // limpiar session
+                  localStorage.removeItem('auth_token')
+                  localStorage.removeItem('auth_user')
+                  setAdminLogeado(false)
+                  cerrarPerfil()
                 }}
               />
             </div>

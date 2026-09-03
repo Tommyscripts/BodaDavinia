@@ -46,5 +46,12 @@ app.post('/api/auth/login', (req, res) => {
   return res.json({ token: 'demo-token', user: { email } })
 })
 
+app.post('/api/auth/change-password', (req, res) => {
+  const { password } = req.body
+  if (!password) return res.status(400).json({ message: 'Missing password' })
+  // demo: no almacenamos realmente la contraseña, solo aceptamos la petición
+  return res.json({ ok: true })
+})
+
 const port = process.env.PORT || 3000
 app.listen(port, () => console.log('Mock backend listening on', port))

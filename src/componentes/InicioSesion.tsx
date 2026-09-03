@@ -17,13 +17,19 @@ function InicioSesion({ onSuccess }: Props) {
     setError(null)
 
     try {
-      const res = await login({ email, password })
-      // store token in localStorage for later backend calls
-      if (res?.token) {
-        localStorage.setItem('auth_token', res.token)
-      }
+        const res = await login({ email, password })
+        // store token in localStorage for later backend calls
+        if (res?.token) {
+          localStorage.setItem('auth_token', res.token)
+        }
+        // also persist basic user info if provided by the backend
+        if (res?.user) {
+          localStorage.setItem('auth_user', JSON.stringify(res.user))
+        } else {
+          localStorage.setItem('auth_user', JSON.stringify({ email }))
+        }
 
-      onSuccess?.(res)
+        onSuccess?.(res)
     } catch (err: any) {
       setError(err?.message || 'Error iniciando sesión')
     } finally {

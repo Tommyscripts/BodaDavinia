@@ -4,7 +4,12 @@ type BotonesProps = {
 	onAdminLoginClick?: () => void
 }
 
+
 function Botones({ onSubirFotosClick, onVerGaleriaClick, onAdminLoginClick }: BotonesProps) {
+	const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+	const userStr = typeof window !== 'undefined' ? localStorage.getItem('auth_user') : null
+	const user = userStr ? JSON.parse(userStr) : null
+
 	const handleSubirFotos = () => {
 		if (onSubirFotosClick) {
 			onSubirFotosClick()
@@ -26,13 +31,23 @@ function Botones({ onSubirFotosClick, onVerGaleriaClick, onAdminLoginClick }: Bo
 	}
 
 	const handleAdminLogin = () => {
+		// Si ya existe sesion, abrir perfil en lugar de login
+		const token = localStorage.getItem('auth_token')
+		if (token) {
+			// si se proporcionó callback, dejar que el padre maneje abrir perfil
 			if (onAdminLoginClick) {
 				onAdminLoginClick()
 				return
 			}
-
-			console.info('El acceso admin estara disponible cuando se cree autenticacion.')
+			return
 		}
+		if (onAdminLoginClick) {
+			onAdminLoginClick()
+			return
+		}
+
+		console.info('El acceso admin estara disponible cuando se cree autenticacion.')
+	}
 
 	return (
 		<div className="mt-6 flex flex-wrap items-center justify-center gap-4 md:mt-8 md:gap-6">
@@ -71,7 +86,7 @@ function Botones({ onSubirFotosClick, onVerGaleriaClick, onAdminLoginClick }: Bo
 					onClick={handleAdminLogin}
 					className="relative -top-1 inline-flex items-center gap-2 rounded-full border border-[#d5c39a] bg-gradient-to-b from-[#fffdf4] to-[#efe6d3] px-4 py-1.5 font-serif text-base font-semibold text-[#8f7746] shadow-[0_5px_12px_rgba(78,59,24,0.22)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(78,59,24,0.26)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bfa46b] focus-visible:ring-offset-2"
 				>
-					Iniciar sesion (Admin)
+					{token ? 'Mi perfil' : 'Iniciar sesion (Admin)'}
 					<svg
 						aria-hidden="true"
 						viewBox="0 0 24 24"
