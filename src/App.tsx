@@ -95,9 +95,9 @@ function App() {
               onUploaded={(results) => {
                 // Map uploaded results into gallery items and prepend to Galeria by opening it
                 const nuevas = results.map((r: any, i: number) => ({
-                  id: `user-${Date.now()}-${i}`,
-                  src: r.preview || r.response?.url || `/uploads/${r.fileName}`,
-                  alt: r.response?.alt || r.fileName,
+                  id: r.response?.image?.filename || r.filename || r.fileName || `user-${Date.now()}-${i}`,
+                  src: r.url || r.preview || (r.response?.image?.path ? `${r.response.image.path}` : `/uploads/${r.fileName}`),
+                  alt: r.response?.image?.originalName || r.response?.alt || r.fileName,
                 }))
 
                 // close uploader and open gallery to show new images

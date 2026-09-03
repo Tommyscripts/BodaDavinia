@@ -80,3 +80,21 @@ export async function changePassword(
 
   return res.json()
 }
+
+export async function deleteImage(
+  filename: string,
+  deletePathBase = '/api/images'
+) {
+  if (!filename) throw new Error('filename required')
+  const encoded = encodeURIComponent(filename)
+  const res = await fetch(fullUrl(`${deletePathBase}/${encoded}`), {
+    method: 'DELETE',
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || res.statusText)
+  }
+
+  return res.json()
+}

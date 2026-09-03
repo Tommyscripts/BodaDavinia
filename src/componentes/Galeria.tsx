@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchImages } from '../services/api'
+import { fetchImages, deleteImage } from '../services/api'
 
 type ImagenGaleria = {
 	id: string
@@ -148,8 +148,27 @@ function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: Galeria
 		if (!confirmado) return
 
 		const siguientes = items.filter((item) => !seleccionadas.has(item.id))
-		setItems(siguientes)
-		setSeleccionadas(new Set())
+
+		// attempt to delete on backend for each selected id
+		const toDelete = items.filter((item) => seleccionadas.has(item.id)).map(i => i.id)
+
+		Promise.allSettled(toDelete.map(id => deleteImage(id).catch((e) => e)))
+			.then(() => {
+				// update state and persisted storage regardless of backend outcome
+				setItems(siguientes)
+				setSeleccionadas(new Set())
+				// update localStorage persisted list
+				try {
+					const existing = localStorage.getItem('uploaded_images')
+					if (existing) {
+						const parsed = JSON.parse(existing)
+						const remain = parsed.filter((p: any) => !seleccionadas.has(p.id))
+						localStorage.setItem('uploaded_images', JSON.stringify(remain))
+					}
+				} catch (e) {
+					// ignore
+				}
+			})
 
 		if (siguientes.length === 0) {
 			setVisorIndex(null)
