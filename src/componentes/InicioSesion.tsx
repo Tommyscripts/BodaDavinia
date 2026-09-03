@@ -42,6 +42,8 @@ function InicioSesion({ onSuccess }: Props) {
       <div className="mb-3">
         <label className="block text-sm font-medium text-gray-700">Correo</label>
         <input
+          name="email"
+          autoComplete="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -53,6 +55,8 @@ function InicioSesion({ onSuccess }: Props) {
       <div className="mb-3">
         <label className="block text-sm font-medium text-gray-700">Contraseña</label>
         <input
+          name="password"
+          autoComplete="current-password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
