@@ -30,11 +30,19 @@ function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: Galeria
 		const propImgs = Array.isArray(imagenes) ? imagenes : []
 		const existingIds = new Set(propImgs.map(i => i.id))
 
+		// normalize persisted entries: if src is a relative path from backend, ensure it's absolute
+		const normalizedPersisted = persisted.map((p) => {
+			if (typeof p.src === 'string' && p.src.startsWith('/uploads/')) {
+				return { ...p, src: `${window.location.origin}${p.src}` }
+			}
+			return p
+		})
+
 		// merge: prop images first (newly uploaded), then persisted, then defaults (avoid duplicates)
 		const merged: ImagenGaleria[] = [
 			...propImgs,
-			...persisted.filter(p => !existingIds.has(p.id)),
-			...imagenesPorDefecto.filter(d => ![...propImgs, ...persisted].some(i => i.id === d.id)),
+			...normalizedPersisted.filter(p => !existingIds.has(p.id)),
+			...imagenesPorDefecto.filter(d => ![...propImgs, ...normalizedPersisted].some(i => i.id === d.id)),
 		]
 
 		return merged
@@ -73,7 +81,12 @@ function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: Galeria
 				// Esperamos que el backend devuelva un array de { id, url, alt }
 				if (Array.isArray(data) && data.length) {
 					const imgs = data.map((it: any) => ({ id: it.id || it.url, src: it.url || it.src, alt: it.alt || '' }))
-					setItems((prev) => [...imgs, ...prev])
+					// Only prepend if we don't already have those ids
+					setItems((prev) => {
+						const existing = new Set(prev.map(p => p.id))
+						const unique = imgs.filter((img: any) => !existing.has(img.id))
+						return [...unique, ...prev]
+					})
 				}
 			} catch (e) {
 				// Silencioso — la UI seguirá mostrando imágenes por defecto o las persistidas

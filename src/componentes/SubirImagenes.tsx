@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { uploadImage } from '../services/api'
+import { uploadImage, API_BASE } from '../services/api'
 
 type Props = {
   multiple?: boolean
@@ -45,11 +45,16 @@ function SubirImagenes({ multiple = true, onUploaded, showActions = true }: Prop
         clearInterval(interval)
         setProgress((p) => ({ ...p, [file.name]: 100 }))
 
-        // the backend returns image info with filename and path; try to use it
-        const imageUrl = res?.image?.path || res?.image?.url || undefined
+        // Determine a stable filename (prefer backend-provided filename)
+        const backendFilename = res?.image?.filename || (res?.image?.path ? String(res.image.path).split('/').pop() : undefined)
+        // Prefer fully qualified URL from backend, otherwise construct from API_BASE + /uploads/<filename>
+        const maybeUrlFromBackend = res?.image?.url || res?.image?.secure_url
+        const imageUrl = maybeUrlFromBackend || (backendFilename ? `${API_BASE.replace(/\/$/, '')}/uploads/${encodeURIComponent(backendFilename)}` : undefined)
+
+        // For immediate preview use object URL, but persist the public URL when available
         const preview = imageUrl || URL.createObjectURL(file)
 
-        results.push({ fileName: file.name, response: res, preview })
+        results.push({ fileName: file.name, response: res, preview, filename: backendFilename, url: imageUrl })
       }
 
       setFiles([])
@@ -59,8 +64,11 @@ function SubirImagenes({ multiple = true, onUploaded, showActions = true }: Prop
       try {
         const existing = typeof window !== 'undefined' ? localStorage.getItem('uploaded_images') : null
         const parsed = existing ? JSON.parse(existing) : []
-        const added = results.map((r: any, i: number) => ({ id: `user-${Date.now()}-${i}`, src: r.preview, alt: r.fileName }))
-        const merged = [...added, ...parsed]
+        const added = results.map((r: any, i: number) => ({ id: r.response?.image?.filename || r.filename || `user-${Date.now()}-${i}`, src: r.url || r.preview, alt: r.fileName }))
+        // avoid duplicates by id
+        const existingIds = new Set(parsed.map((p: any) => p.id))
+        const uniqueAdded = added.filter((a: any) => !existingIds.has(a.id))
+        const merged = [...uniqueAdded, ...parsed]
         localStorage.setItem('uploaded_images', JSON.stringify(merged))
       } catch (e) {
         // ignore storage errors
