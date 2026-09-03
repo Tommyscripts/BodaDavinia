@@ -7,8 +7,6 @@ type BotonesProps = {
 
 function Botones({ onSubirFotosClick, onVerGaleriaClick, onAdminLoginClick }: BotonesProps) {
 	const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
-	const userStr = typeof window !== 'undefined' ? localStorage.getItem('auth_user') : null
-	const user = userStr ? JSON.parse(userStr) : null
 
 	const handleSubirFotos = () => {
 		if (onSubirFotosClick) {
