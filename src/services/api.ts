@@ -1,5 +1,5 @@
 // If VITE_API_BASE is set, use it; otherwise default to the deployed backend.
-const DEFAULT_API = 'https://bodadaviniabackend-zt73.onrender.com'
+const DEFAULT_API = 'http://bodadaviniabackend-production.up.railway.app:8080'
 export const API_BASE = (import.meta.env.VITE_API_BASE as string) || DEFAULT_API
 
 function fullUrl(path: string) {
