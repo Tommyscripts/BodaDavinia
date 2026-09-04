@@ -49,7 +49,19 @@ function SubirImagenes({ multiple = true, onUploaded, showActions = true }: Prop
         const backendFilename = res?.image?.filename || (res?.image?.path ? String(res.image.path).split('/').pop() : undefined)
         // Prefer fully qualified URL from backend, otherwise construct from API_BASE + /uploads/<filename>
         const maybeUrlFromBackend = res?.image?.url || res?.image?.secure_url
-        const imageUrl = maybeUrlFromBackend || (backendFilename ? `${API_BASE.replace(/\/$/, '')}/uploads/${encodeURIComponent(backendFilename)}` : undefined)
+        let imageUrl: string | undefined
+        if (maybeUrlFromBackend) {
+          // If backend returned an absolute URL, use it. If it returned a relative path
+          // (e.g. `/uploads/<file>`), prefix it with `API_BASE` so we persist a full URL.
+          if (maybeUrlFromBackend.startsWith('http')) {
+            imageUrl = maybeUrlFromBackend
+          } else {
+            const base = API_BASE.replace(/\/$/, '')
+            imageUrl = `${base}${maybeUrlFromBackend.startsWith('/') ? '' : '/'}${maybeUrlFromBackend}`
+          }
+        } else if (backendFilename) {
+          imageUrl = `${API_BASE.replace(/\/$/, '')}/uploads/${encodeURIComponent(backendFilename)}`
+        }
 
         // For immediate preview use object URL, but persist the public URL when available
         const preview = imageUrl || URL.createObjectURL(file)

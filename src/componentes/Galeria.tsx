@@ -128,17 +128,27 @@ function Galeria({ estaLogeado = false, imagenes = imagenesPorDefecto }: Galeria
 		})
 	}
 
-	const descargarSeleccion = () => {
+	const descargarSeleccion = async () => {
 		const elementos = items.filter((item) => idsSeleccionados.includes(item.id))
 
-		elementos.forEach((item) => {
-			const enlace = document.createElement('a')
-			enlace.href = item.src
-			enlace.download = `${item.id}.jpg`
-			document.body.appendChild(enlace)
-			enlace.click()
-			document.body.removeChild(enlace)
-		})
+		for (const item of elementos) {
+			try {
+				const resp = await fetch(item.src, { mode: 'cors' })
+				if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+				const blob = await resp.blob()
+				const url = URL.createObjectURL(blob)
+				const enlace = document.createElement('a')
+				enlace.href = url
+				enlace.download = `${item.id}.jpg`
+				document.body.appendChild(enlace)
+				enlace.click()
+				document.body.removeChild(enlace)
+				URL.revokeObjectURL(url)
+			} catch (e) {
+				console.error('Error descargando', item, e)
+				alert(`No se pudo descargar ${item.id}: ${e}`)
+			}
+		}
 	}
 
 	const borrarSeleccion = async () => {
