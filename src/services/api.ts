@@ -15,7 +15,7 @@ function fullUrl(path: string) {
   return path
 }
 
-export async function uploadImage(file: File, uploadPath = '/api/images/upload', fieldName = 'image') {
+export async function uploadImage(file: File, uploadPath = '/api/upload', fieldName = 'file') {
   const fd = new FormData()
   fd.append(fieldName, file)
 
